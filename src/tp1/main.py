@@ -1,5 +1,4 @@
 import argparse
-
 from tp1.utils.capture import Capture
 from tp1.utils.config import logger
 from tp1.utils.report import Report
@@ -29,6 +28,10 @@ def get_arguments() -> argparse.Namespace:
 def main () -> None:
     preflight_52f9be()
     args = get_arguments()
+    capture = Capture()
+    capture.read_pcap(args.pcap)
+
+
 
     logger.info("Starting TP1")
     logger.info("PCAP file: %s", args.pcap)

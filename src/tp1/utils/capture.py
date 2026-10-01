@@ -1,11 +1,20 @@
 from src.tp1.utils.lib import choose_interface
 from tp1.utils.config import logger
+from scapy.all import rdpcap
 
 
 class Capture:
     def __init__(self) -> None:
         self.interface = choose_interface()
         self.summary = ""
+        self.packets = []
+
+    def read_pcap(self, pcap_chemin: str) -> None:
+       """lit un fichier PCAP et conserve le paquets"""""
+       self.packets = rdpcap(pcap_chemin)
+       logger.info("%d paquets chargés depuis %s", len(self.packets),pcap_chemin)
+
+
 
     def capture_traffic(self) -> None:
         """
