@@ -1,3 +1,9 @@
+from scapy.layers.http import HTTP
+from scapy.layers.dns import DNS
+from scapy.layers.inet import TCP, UDP, ICMP, IP
+from scapy.layers.l2 import ARP, Ether
+from scapy.layers.snmp import SNMP
+
 from src.tp1.utils.lib import choose_interface
 from tp1.utils.config import logger
 from scapy.all import rdpcap
@@ -33,7 +39,36 @@ class Capture:
         """
         Return all protocols captured with total packets number
         """
-        return ""
+        protocol_reseau = {"ethernet": 0,
+                           "arp": 0,
+                           "ip":0,
+                           "tcp":0,
+                           "udp":0,
+                           "icmp":0,
+                           "dns":0,
+                           "http":0,
+                  }
+        for packet in self.packets:
+            if Ether in packet:
+                protocol_reseau["ethernet"] += 1
+            if ARP in packet:
+                protocol_reseau["arp"] += 1
+            if IP in packet:
+                protocol_reseau["ip"] += 1
+            if TCP in packet:
+                protocol_reseau["tcp"] += 1
+            if UDP in packet:
+                protocol_reseau["udp"] += 1
+            if ICMP in packet:
+                protocol_reseau["icmp"] += 1
+            if DNS in packet:
+                protocol_reseau["dns"] += 1
+            if HTTP in packet:
+                protocol_reseau["http"] += 1
+            """if SNMP in packet:
+                protocol_reseau["snmp"] += 1"""
+        return protocol_reseau
+
 
     def analyse(self, protocols: str) -> None:
         """

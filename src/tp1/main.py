@@ -1,6 +1,7 @@
 import argparse
 from tp1.utils.capture import Capture
 from tp1.utils.config import logger
+from tp1.utils.detector import Detector
 from tp1.utils.report import Report
 
 def preflight_52f9be() -> None:
@@ -28,10 +29,22 @@ def get_arguments() -> argparse.Namespace:
 def main () -> None:
     preflight_52f9be()
     args = get_arguments()
+
     capture = Capture()
     capture.read_pcap(args.pcap)
 
+    protocols = capture.get_all_protocols()
+    logger.info("protocols; detectés: %s",protocols)
 
+    detector = Detector(capture.packets)
+    port_scan_attacks = detector.detect_port_scan()
+    logger.info("port_scan_attacks: %s",port_scan_attacks)
+
+    arp_attacks = detector.detect_arp_spoofing()
+    logger.info("arp_spoofing: %s",arp_attacks)
+
+    sql_injection = detector.detect_sql_injection()
+    logger.info("sql_injection: %s",sql_injection)
 
     logger.info("Starting TP1")
     logger.info("PCAP file: %s", args.pcap)
