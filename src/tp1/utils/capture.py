@@ -1,12 +1,27 @@
-from src.tp1.utils.lib import choose_interface
 from tp1.utils.config import logger
+from scapy.all import rdpcap
+from scapy.all import PacketList
+from scapy.all import TCP, UDP, ARP, ICMP, Ether, IP, DNS
+from scapy.layers.http import HTTP
+
 
 
 class Capture:
     def __init__(self) -> None:
-        self.interface = choose_interface()
-        self.summary = ""
+            self.interface = None
+            self.summary = ""
+    
 
+    def lire_fichier_pcap(self, chemin: str)-> None :
+         """lire le fichier pcap et retourner la liste des paquets"""
+         self.packets = rdpcap(chemin)
+         logger.info("fichier a ete chargé avec succes : %d", len (self.packets))
+
+
+
+
+
+    
     def capture_traffic(self) -> None:
         """
         Capture network traffic from an interface
@@ -20,11 +35,40 @@ class Capture:
         """
         return ""
 
-    def get_all_protocols(self) -> str:
+    def get_all_protocols(self) -> dict[str, int]:
+
         """
-        Return all protocols captured with total packets number
-        """
-        return ""
+        Return all protocols captured with total packets number"""
+
+        protocoles = { "TCP": 0,
+                      "UDP": 0,
+                      "ARP": 0,
+                      "ICMP": 0,
+                      "ETHERNET": 0,
+                      "IP": 0,
+                      "DNS": 0,
+                      "HTTP": 0
+                      }
+
+        for packet in self.packets:
+            if TCP in packet:
+                protocoles["TCP"] += 1
+            if UDP in packet:
+                protocoles["UDP"] += 1
+            if ARP in packet:
+                protocoles["ARP"] += 1
+            if ICMP in packet:
+                protocoles["ICMP"] += 1
+            if Ether in packet:
+                protocoles["Ethernet"] += 1
+            if IP in packet:
+                protocoles["IP"] += 1
+            if DNS in packet:
+                protocoles["DNS"] += 1
+            if HTTP in packet:
+                protocoles["HTTP"] += 1
+
+        return protocoles
 
     def analyse(self, protocols: str) -> None:
         """
