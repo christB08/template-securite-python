@@ -1,4 +1,5 @@
 from tp1.utils.capture import Capture
+import json
 
 
 class Report:
@@ -45,3 +46,7 @@ class Report:
             # TODO: generate array
             array = ""
             self.array = array
+
+def generer_json(rapport : dict, chemin : str) -> None:
+    with open(chemin, "w", encoding="utf-8") as json_file:
+        json.dump(rapport, json_file, indent=4)

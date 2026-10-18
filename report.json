@@ -1,0 +1,23 @@
+{
+    "protocols": {
+        "TCP": 95,
+        "UDP": 12,
+        "ARP": 20,
+        "ICMP": 16,
+        "ETHERNET": 143,
+        "IP": 123,
+        "DNS": 12,
+        "HTTP": 13
+    },
+    "attacks": [
+        {
+            "type": "arp_spoofing",
+            "attacker": "02:a6:15:44:3a:f7"
+        },
+        {
+            "type": "scan_syn",
+            "attacker": "192.168.213.66"
+        }
+    ],
+    "flag": ""
+}
