@@ -1,5 +1,6 @@
 from unittest.mock import patch
 from src.tp1.utils.capture import Capture
+from scapy.all import Ether, IP, TCP, UDP, ARP
 
 
 def test_capture_init():
@@ -7,7 +8,7 @@ def test_capture_init():
     capture = Capture()
 
     # Then
-    assert capture.interface == ""
+    assert capture.interface is None 
     assert capture.summary == ""
 
 
@@ -20,7 +21,7 @@ def test_given_capture_when_capture_traffic_then_interface_is_set():
 
     # Then
     # This is a minimal test since the method doesn't do much yet
-    assert capture.interface == ""
+    assert capture.interface is None
 
 
 def test_sort_network_protocols():
@@ -37,13 +38,21 @@ def test_sort_network_protocols():
 def test_get_all_protocols():
     # Given
     capture = Capture()
+    capture.packets = [
+        Ether() / IP() / TCP (), 
+        Ether() / IP() / UDP(), 
+        Ether() / ARP(),
+        ]
 
     # When
-    result = capture.get_all_protocols()
+    resultat = capture.get_all_protocols()
 
     # Then
-    assert result == ""  # Method currently returns None
-
+    assert resultat ["Ethernet"] == 3
+    assert resultat ["IP"] == 2
+    assert resultat ["TCP"] == 1
+    assert resultat ["UDP"] == 1 
+    assert resultat ["ARP"] == 1
 
 def test_analyse():
     # Given

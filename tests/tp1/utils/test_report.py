@@ -1,5 +1,6 @@
 from unittest.mock import patch, mock_open, MagicMock
-from src.tp1.utils.report import Report
+from src.tp1.utils.report import Report, generer_json
+import json
 
 
 def test_report_init():
@@ -82,3 +83,28 @@ def test_generate_invalid_param():
     # Then
     assert report.graph == ""
     assert report.array == ""
+
+def test_generer_json(tmp_path):
+    """Vérifie que le rapport JSON est créé correctement."""
+
+    # Given : préparer un rapport
+    rapport = {
+        "protocols": {"TCP": 5, "ARP": 2},
+        "attacks": [
+            {"type": "port_scan", "attacker": "192.168.1.10"}
+        ],
+        "flag": "ESGI{test}",
+    }
+
+    chemin = tmp_path / "rapport_test.json"
+
+    # When : générer le fichier
+    generer_json(rapport, str(chemin))
+
+    # Then : vérifier le fichier et son contenu
+    assert chemin.exists()
+
+    with chemin.open(encoding="utf-8") as fichier:
+        contenu = json.load(fichier)
+
+    assert contenu == rapport
