@@ -4,7 +4,7 @@
         "UDP": 12,
         "ARP": 20,
         "ICMP": 16,
-        "ETHERNET": 143,
+        "Ethernet": 143,
         "IP": 123,
         "DNS": 12,
         "HTTP": 13
@@ -12,12 +12,18 @@
     "attacks": [
         {
             "type": "arp_spoofing",
-            "attacker": "02:a6:15:44:3a:f7"
+            "attacker": "02:34:5b:f0:b3:a8"
         },
         {
-            "type": "scan_syn",
+            "type": "port_scan",
             "attacker": "192.168.213.66"
+        },
+        {
+            "type": "sql_injection",
+            "attacker": "192.168.213.77",
+            "url": "/login.php?user=admin' or 1=1-- &token=esgi{tp1_f2ebab9571ff}",
+            "motif": "or 1=1"
         }
     ],
-    "flag": ""
+    "flag": "ESGI{tp1_f2ebab9571ff}"
 }

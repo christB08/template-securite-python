@@ -2,7 +2,11 @@ from tp1.utils.config import logger
 from scapy.all import rdpcap
 from scapy.all import PacketList
 from scapy.all import TCP, UDP, ARP, ICMP, Ether, IP, DNS
-from scapy.layers.http import HTTP
+from scapy.layers.http import HTTP, HTTPRequest
+from scapy.packet import Raw 
+from urllib.parse import unquote, urlparse, parse_qs, urlsplit
+import re 
+
 
 
 
@@ -117,14 +121,14 @@ class Capture:
                 mac_destination = packet[ARP].hwdst 
                 ip_rechercher = packet[ARP].pdst
                 logger.info("ARP packet: ip=%s, mac=%s, operation=%s", ip, mac, operation)
-                if ip not in association_ip_mac: 
-                        association_ip_mac[ip] = mac
-                elif mac != association_ip_mac[ip]: 
-                        ancienne_mac = association_ip_mac[ip]
-                        nouvelle_mac = mac
-                        alerte = (ip, ancienne_mac, nouvelle_mac)
-                        if alerte not in attaque_detectee:
-                            attaque_detectee.append(alerte)
+                if operation == 2: 
+                    if ip not in association_ip_mac: 
+                        association_ip_mac[ip] = {}
+                    if mac not in association_ip_mac[ip]: 
+                        association_ip_mac[ip][mac] = 0
+                    association_ip_mac[ip][mac] += 1
+                    if Ether in packet: 
+                        logger.info("ARP REPLY : IP=%s | MAC_ARP =%s | MAC_ETHERNET=%s | IP_CIBLE=%s", ip, mac, packet[Ether].src, ip_rechercher)
                 if operation == 1:
                     request_arp.add((ip, ip_rechercher))
                     logger.info("requete arp memorise: %s", request_arp)
@@ -135,6 +139,12 @@ class Capture:
                           logger.warning("reponse arp potentiellement malicieuse: mac=%s, ip=%s", mac, ip)
                      logger.info("reponse arp: mac=%s, IP annonce=%s, ip cible=%s, mac cible=%s", mac, ip, ip_rechercher, mac_destination)
                      logger.info("nombre de reponses arp par mac: %s", compteur_reponse_arp)
+        logger.info("association ip-mac: %s", association_ip_mac)
+        for ip, addresses_mac in association_ip_mac.items():
+            if len(addresses_mac) > 1:
+                mac_suspecte = max(addresses_mac, key=addresses_mac.get)
+                logger.warning("conflit ARP : IP=%s, MAC suspecte=%s", ip, mac_suspecte)
+                attaque_detectee.append((ip, "", mac_suspecte))
         return attaque_detectee
 
     def detecter_scan_syn(self) -> list:
@@ -163,4 +173,40 @@ class Capture:
                 })
         logger.info("Attaques detectees: %s", attaques_detectees)
         return attaques_detectees
-                    
+
+    def detecter_injection_sql(self) -> list:
+        attaques_detectees = []
+        motifs_sql = ["or 1=1", "union select", "drop table", "insert into", "select * from", "'--"]
+        for packet in self.packets : 
+            if IP in packet and HTTPRequest in packet :
+                ip_source = packet[IP].src
+                url = packet[HTTPRequest].Path.decode("utf-8", errors="ignore")
+                url = unquote(url).lower()
+                logger.info("HTTP : source=%s, url=%s", ip_source, url) 
+                for motif in motifs_sql :
+                    if motif in url :
+                        attaques_detectees.append({
+                            "type": "sql_injection",
+                            "attacker": ip_source,
+                            "url": url,
+                            "motif": motif
+                        })
+                        break
+                        logger.warning("Injection SQL detectee : source=%s, url=%s, motif=%s", ip_source, url, motif)
+        return attaques_detectees
+
+    def extraire_flag(self) -> str:
+        for numero, packet in enumerate(self.packets, start=1):
+                if HTTPRequest in packet:
+                    url = packet[HTTPRequest].Path.decode("utf-8", errors="ignore")
+                    parametres = parse_qs(urlsplit(url).query)
+                    for token in parametres.get("token", []):
+                        token = unquote(token)
+                        resultat = re.search(r"ESGI\{[^}]+\}", token)
+                        if resultat:
+                            flag = resultat.group(0)
+                            logger.info("Flag trouve dans le paquet %d : %s", numero, flag)
+                            return flag
+
+        return ""
+        

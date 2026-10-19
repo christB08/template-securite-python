@@ -29,12 +29,15 @@ def main():
     summary = capture.get_summary()
 
     attaques_syn = capture.detecter_scan_syn()
-    alertes = alerte_arp + attaques_syn
+    attaques_sql = capture.detecter_injection_sql()
+    flag = capture.extraire_flag()
+    alertes = alerte_arp + attaques_syn + attaques_sql
+
 
     rapport = {
         "protocols": resulats_protocoles,
         "attacks": alertes,
-        "flag": ""
+        "flag": flag
     }
     
     generer_json(rapport, args.out)
