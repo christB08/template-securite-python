@@ -1,5 +1,7 @@
 import logging
 
+from tp2.utils.classification import classify_sample
+from tp2.utils.risk import calculate_risk_score
 from tp2.utils.sample import Sample
 from tp2.utils.scanner import YaraScanner
 
@@ -19,11 +21,32 @@ class Triage:
 
         logger.info("Analyse de %s", self.path)
 
+        # 1. Récupération des métadonnées
         metadata = sample.get_file_metadata()
+
+        # 2. Extraction des indicateurs de compromission
         iocs = sample.extract_iocs()
+
+        # 3. Analyse de la structure du binaire
         binary_info = sample.parse_binary()
+
+        # 4. Analyse avec les règles YARA
         yara_matches = self.scanner.scan(sample.data)
 
+        # 5. Calcul du score de risque
+        score = calculate_risk_score(
+            entropy=metadata["entropy"],
+            iocs=iocs,
+            yara_matches=yara_matches,
+        )
+
+        # 6. Classification et correspondance MITRE ATT&CK
+        family_guess, mitre_attack = classify_sample(
+            yara_matches=yara_matches,
+            entropy=metadata["entropy"],
+        )
+
+        # 7. Construction du rapport d'analyse
         return {
             **metadata,
             "iocs": iocs,
@@ -31,9 +54,9 @@ class Triage:
             "exports": binary_info["exports"],
             "sections": binary_info["sections"],
             "yara_matches": yara_matches,
-            "family_guess": "unknown",
-            "mitre_attack": [],
+            "family_guess": family_guess,
+            "mitre_attack": mitre_attack,
             "llm_summary": "Analyse statique locale, sans LLM.",
-            "score": 0,
-            "flag": None,
+            "score": score,
+            "flag": sample.extract_flag(),
         }

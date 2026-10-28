@@ -44,17 +44,16 @@ class Sample:
         text = self.data.decode("latin-1", errors="ignore")
 
         patterns = {
-            "urls": r"https?://[^\s\"'<>]+",
+            "urls": r"https?://[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]+",
             "ips": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
             "domains": r"\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b",
             "mutex": r"(?:Global|Local)\\[A-Za-z0-9_.-]+",
             "registry": (
-    r"(?:HKCU|HKLM|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE)"
-    r"\\[A-Za-z0-9_\\.-]+"
-),
+                r"(?:HKCU|HKLM|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE)"
+                r"\\[A-Za-z0-9_\\.-]+"
+            ),
             "paths": r"[A-Za-z]:\\(?:[^\\\s]+\\)*[^\\\s]+",
         }
-
         results: dict[str, list[str]] = {}
 
         for category, pattern in patterns.items():
@@ -114,3 +113,19 @@ class Sample:
             return result
 
         return result
+
+
+
+
+    def extract_flag(self) -> str | None:
+        """Extrait le flag associé au marqueur FLAG=."""
+        text = self.data.decode("latin-1", errors="ignore")
+
+        pattern = r"\bFLAG\s*=\s*(ESGI\{[A-Za-z0-9_]+\})"
+
+        match = re.search(pattern, text)
+
+        if match:
+            return match.group(1)
+
+        return None
