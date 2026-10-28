@@ -84,11 +84,42 @@ def breach_web(target: str) -> tuple[str, int, bytes]:
 
 
 def breach_network(host: str, port: int, key: bytes) -> str:
-    """pwntools/socket : décode le flux base64+XOR en boucle sous 30 s.
+    """Résout les trois challenges TCP encodés en Base64 et XOR."""
+    import base64
+    import socket
 
-    Retourne le flag final. Indices : pwn.remote, base64.
-    """
-    raise NotImplementedError
+    with socket.create_connection((host, port), timeout=5) as connexion:
+        connexion.settimeout(5)
+        fichier = connexion.makefile("rb")
+
+        accueil = fichier.readline()
+        logger.info("Serveur TCP : %s", accueil.decode().strip())
+
+        for round_num in range(1, 4):
+            challenge = fichier.readline().strip()
+
+            if not challenge:
+                raise RuntimeError(
+                    f"Aucun challenge reçu au round {round_num}"
+                )
+
+            donnees = base64.b64decode(challenge, validate=True)
+
+            token = bytes(
+                octet ^ key[i % len(key)]
+                for i, octet in enumerate(donnees)
+            )
+
+            connexion.sendall(token + b"\n")
+            logger.info("Round TCP %d terminé", round_num)
+
+        reponse = fichier.readline().decode().strip()
+
+        if not reponse.startswith("OK "):
+            raise RuntimeError(f"Échec du challenge TCP : {reponse}")
+
+        flag_final = reponse.removeprefix("OK ").strip()
+        return flag_final
 
 
 def main() -> None:
