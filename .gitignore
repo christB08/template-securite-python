@@ -9,3 +9,8 @@ __pycache__/
 report.pdf
 app.log
 .env
+# Échantillons et rapports générés
+samples/
+reports/
+*.bin
+
