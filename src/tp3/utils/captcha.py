@@ -6,9 +6,9 @@ from PIL import Image, ImageEnhance, ImageOps
 
 
 class Captcha:
-    def __init__(self, url: str, session: requests.Session):
+    def __init__(self, url: str, session: requests.Session | None = None):
         self.url = url
-        self.session = session
+        self.session = session if session is not None else requests.Session()
         self.image = None
         self.value = ""
 

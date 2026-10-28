@@ -57,7 +57,7 @@ def breach_web(target: str) -> tuple[str, int, bytes]:
 
     for endpoint in endpoints:
         if endpoint:
-            session = Session(target)
+            session = Session(endpoint)
 
             for tentative in range(5):
                 try:

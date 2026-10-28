@@ -3,6 +3,7 @@
 import requests
 
 from tp3.utils.captcha import Captcha
+from urllib.parse import urljoin
 
 
 class Session:
@@ -20,13 +21,13 @@ class Session:
     def prepare_request(self) -> None:
         """Initialise la session et résout le CAPTCHA."""
         response = self.http_session.get(
-            f"{self.url}/internal-panel",
+            self.url,
             timeout=5,
         )
         response.raise_for_status()
 
         captcha = Captcha(
-            f"{self.url}/captcha.png",
+            urljoin(self.url, "/captcha.png"),
             self.http_session,
         )
         captcha.capture()
@@ -37,7 +38,7 @@ class Session:
     def submit_request(self) -> None:
         """Envoie la réponse du CAPTCHA au serveur."""
         self.response = self.http_session.post(
-            f"{self.url}/internal-panel",
+            self.url,
             data={"captcha": self.captcha_value},
             timeout=5,
         )
