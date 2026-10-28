@@ -19,11 +19,13 @@ def main() -> None:
         required=True,
         help="Dossier contenant les échantillons à analyser",
     )
+
     parser.add_argument(
         "--rules",
         required=True,
         help="Dossier contenant les règles YARA",
     )
+
     parser.add_argument(
         "--out",
         required=True,
@@ -37,10 +39,14 @@ def main() -> None:
     output_dir = Path(args.out)
 
     if not samples_dir.is_dir():
-        parser.error(f"Dossier des échantillons introuvable : {samples_dir}")
+        parser.error(
+            f"Dossier des échantillons introuvable : {samples_dir}"
+        )
 
     if not rules_dir.is_dir():
-        parser.error(f"Dossier des règles YARA introuvable : {rules_dir}")
+        parser.error(
+            f"Dossier des règles YARA introuvable : {rules_dir}"
+        )
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -55,16 +61,32 @@ def main() -> None:
         try:
             logger.info("Analyse de %s", sample_path.name)
 
+            # 1. Analyse statique du fichier
             result = Triage(
                 str(sample_path),
                 str(rules_dir),
             ).run()
 
-            output_path = output_dir / f"{sample_path.name}.triage.json"
+            # 2. Définition des chemins de sortie
+            json_path = (
+                output_dir / f"{sample_path.name}.triage.json"
+            )
 
-            Report(result).generate_json(str(output_path))
+            pdf_path = (
+                output_dir / f"{sample_path.name}.triage.pdf"
+            )
 
-            logger.info("Rapport créé : %s", output_path)
+            # 3. Création de l'objet Report
+            report = Report(result)
+
+            # 4. Génération du JSON
+            report.generate_json(str(json_path))
+
+            # 5. Génération du PDF
+            report.generate_pdf(str(pdf_path))
+
+            logger.info("Rapport JSON créé : %s", json_path)
+            logger.info("Rapport PDF créé : %s", pdf_path)
 
         except (OSError, ValueError, RuntimeError) as exc:
             logger.error(
