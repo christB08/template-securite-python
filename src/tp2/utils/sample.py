@@ -5,6 +5,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
+import lief
 import magic
 
 
@@ -73,6 +74,43 @@ class Sample:
 
         return results
 
-    def parse_binary(self) -> dict:
-        """Analyse les imports, exports et sections du binaire."""
-        raise NotImplementedError
+    def parse_binary(self) -> dict[str, list[str]]:
+        """la ca extrait les imports, exports et sections d'un binaire PE ou ELF."""
+        result = {
+            "imports": [],
+            "exports": [],
+            "sections": [],
+        }
+
+        try:
+            binary = lief.parse(self.path)
+
+            if binary is None:
+                return result
+
+            result["sections"] = [
+                section.name for section in binary.sections
+            ]
+
+            if isinstance(binary, lief.PE.Binary):
+                for imported_library in binary.imports:
+                    for entry in imported_library.entries:
+                        result["imports"].append(entry.name)
+
+                if binary.has_exports:
+                    result["exports"] = [
+                        entry.name for entry in binary.get_export().entries
+                    ]
+
+            elif isinstance(binary, lief.ELF.Binary):
+                result["imports"] = [
+                    symbol.name for symbol in binary.imported_symbols
+                ]
+                result["exports"] = [
+                    symbol.name for symbol in binary.exported_symbols
+                ]
+
+        except (lief.bad_file, lief.bad_format):
+            return result
+
+        return result

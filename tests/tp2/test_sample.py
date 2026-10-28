@@ -60,3 +60,48 @@ def test_extract_iocs_invalid_ip(tmp_path):
     iocs = sample.extract_iocs()
 
     assert iocs["ips"] == []
+
+def test_parse_binary_invalid_file(tmp_path):
+    """Un fichier non exécutable ne doit pas provoquer d'erreur."""
+    path = tmp_path / "invalid.bin"
+    path.write_bytes(b"Hello, this is not an executable")
+
+    sample = Sample(str(path))
+    result = sample.parse_binary()
+
+    assert result == {
+        "imports": [],
+        "exports": [],
+        "sections": [],
+    }
+
+
+def test_parse_binary_result_structure(tmp_path):
+    """Vérifie que le résultat contient les trois catégories attendues."""
+    path = tmp_path / "empty.bin"
+    path.write_bytes(b"")
+
+    sample = Sample(str(path))
+    result = sample.parse_binary()
+
+    assert isinstance(result["imports"], list)
+    assert isinstance(result["exports"], list)
+    assert isinstance(result["sections"], list)
+
+def test_parse_binary_real_elf():
+    """Vérifie l'analyse d'un véritable fichier ELF."""
+    from pathlib import Path
+
+    import pytest
+
+    path = Path("samples/sample1_dropper.bin")
+
+    if not path.exists():
+        pytest.skip("Échantillon ELF non disponible")
+
+    sample = Sample(str(path))
+    result = sample.parse_binary()
+
+    assert ".text" in result["sections"]
+    assert "free" in result["imports"]
+    assert isinstance(result["exports"], list)
