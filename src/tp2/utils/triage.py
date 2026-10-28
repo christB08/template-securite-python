@@ -4,6 +4,7 @@ from tp2.utils.classification import classify_sample
 from tp2.utils.risk import calculate_risk_score
 from tp2.utils.sample import Sample
 from tp2.utils.scanner import YaraScanner
+from tp2.utils.summary import generate_local_summary
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,13 @@ class Triage:
             entropy=metadata["entropy"],
         )
 
+        summary = generate_local_summary(
+            family_guess=family_guess,
+            score=score,
+            yara_matches=yara_matches,
+            mitre_attack=mitre_attack,
+        )
+
         # 7. Construction du rapport d'analyse
         return {
             **metadata,
@@ -56,7 +64,7 @@ class Triage:
             "yara_matches": yara_matches,
             "family_guess": family_guess,
             "mitre_attack": mitre_attack,
-            "llm_summary": "Analyse statique locale, sans LLM.",
+            "llm_summary": summary,
             "score": score,
             "flag": sample.extract_flag(),
         }
